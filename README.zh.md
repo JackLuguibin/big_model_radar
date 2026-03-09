@@ -191,20 +191,26 @@ openclaw_peers:
 
 | Secret | 必填 | 说明 |
 |--------|------|------|
-| `ANTHROPIC_API_KEY` | ✅ | API 密钥，兼容 Anthropic 和 Kimi Code |
-| `ANTHROPIC_BASE_URL` | 可选 | API 地址覆盖。使用 Kimi Code 时设置为 `https://api.kimi.com/coding/`，使用 Anthropic 时留空 |
+| `OPENAI_API_KEY` | ✅ | 任意 OpenAI 兼容接口的 API 密钥 |
+| `OPENAI_BASE_URL` | 可选 | API 地址覆盖。使用 OpenAI 默认接口可留空，或设置兼容服务地址，如 `https://api.openai.com/v1` |
+| `OPENAI_MODEL` | 可选 | 传给 `chat/completions` 的模型名，例如 `gpt-4.1-mini` |
+| `PAGES_URL` | 建议配置 | 站点公开地址，例如 `https://your-user.github.io/agents-radar`。建议放在仓库 Variables 中 |
 | `TELEGRAM_BOT_TOKEN` | 可选 | Telegram bot token，从 [@BotFather](https://t.me/BotFather) 获取。设置后每次 digest 完成自动推送通知 |
-| `TELEGRAM_CHAT_ID` | 可选 | 接收通知的 Telegram 频道 / 群组 / 用户 ID |
+| `TELEGRAM_CHAT_ID` | 可选 | 接收通知的 Telegram 频道 / 群组 / 用户 ID。启用 Telegram 推送时必须配置 |
 
 > `GITHUB_TOKEN` 由 GitHub Actions 自动提供，无需手动添加。
+>
+> 向后兼容：`ANTHROPIC_API_KEY`、`ANTHROPIC_BASE_URL`、`ANTHROPIC_MODEL` 仍可作为别名使用，但新的配置建议统一改用 `OPENAI_*`。
 
 **配置 Telegram 推送**（可选）：
 1. 向 [@BotFather](https://t.me/BotFather) 创建 bot，复制 token
 2. 将 bot 加入频道 / 群组，或直接与 bot 私聊
 3. 通过 [@userinfobot](https://t.me/userinfobot) 获取 chat ID
 4. 在仓库 Secrets 中添加 `TELEGRAM_BOT_TOKEN` 和 `TELEGRAM_CHAT_ID`
+5. 在 **Settings → Secrets and variables → Actions → Variables** 中添加 `PAGES_URL`
 
 > 两个 secret 均未设置时，通知步骤静默跳过，不影响正常运行。
+> 若未设置 `PAGES_URL`，程序会按 `owner/repo` 自动推导为 `https://owner.github.io/repo`。
 
 ### 3. 启用工作流
 
@@ -220,8 +226,9 @@ openclaw_peers:
 pnpm install
 
 export GITHUB_TOKEN=ghp_xxxxx
-export ANTHROPIC_BASE_URL=https://api.kimi.com/coding/
-export ANTHROPIC_API_KEY=sk-kimi-xxxxxxxx
+export OPENAI_BASE_URL=https://api.openai.com/v1
+export OPENAI_API_KEY=sk-xxxxxxxx
+export OPENAI_MODEL=gpt-4.1-mini
 export DIGEST_REPO=your-username/agents-radar  # 可选，留空则仅写入本地文件
 
 pnpm start

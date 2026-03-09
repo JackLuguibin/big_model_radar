@@ -191,20 +191,26 @@ Go to **Settings → Secrets and variables → Actions** and add:
 
 | Secret | Required | Description |
 |--------|----------|-------------|
-| `ANTHROPIC_API_KEY` | ✅ | API key — works with both Anthropic and Kimi Code |
-| `ANTHROPIC_BASE_URL` | optional | API endpoint override. Set to `https://api.kimi.com/coding/` for Kimi Code; leave unset for Anthropic |
+| `OPENAI_API_KEY` | ✅ | API key for any OpenAI-compatible endpoint |
+| `OPENAI_BASE_URL` | optional | API endpoint override. Leave unset for OpenAI, or set a compatible provider URL such as `https://api.openai.com/v1` |
+| `OPENAI_MODEL` | optional | Model name passed to `chat/completions`, e.g. `gpt-4.1-mini` |
+| `PAGES_URL` | recommended | Public site base URL, e.g. `https://your-user.github.io/agents-radar`. Prefer a repository variable for this |
 | `TELEGRAM_BOT_TOKEN` | optional | Telegram bot token from [@BotFather](https://t.me/BotFather). If set, a message is sent after each digest run |
-| `TELEGRAM_CHAT_ID` | optional | Telegram chat/channel/group ID to send notifications to |
+| `TELEGRAM_CHAT_ID` | optional | Telegram chat/channel/group ID to send notifications to. Required if you enable Telegram notifications |
 
 > `GITHUB_TOKEN` is provided automatically by GitHub Actions.
+>
+> Backward compatibility: `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, and `ANTHROPIC_MODEL` are still accepted as aliases, but new setups should use `OPENAI_*`.
 
 **Setting up Telegram notifications** (optional):
 1. Message [@BotFather](https://t.me/BotFather) on Telegram, create a bot, and copy the token
 2. Add the bot to your channel/group, or start a DM with it
 3. Get the chat ID via [@userinfobot](https://t.me/userinfobot) or the [getUpdates](https://core.telegram.org/bots/api#getupdates) API
 4. Add `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` as repository secrets
+5. Add `PAGES_URL` as a repository variable under **Settings → Secrets and variables → Actions → Variables**
 
 > If neither secret is set, the notification step is silently skipped.
+> If `PAGES_URL` is unset, the site URL is derived from `owner/repo` as `https://owner.github.io/repo`.
 
 ### 3. Enable the workflow
 
@@ -220,8 +226,9 @@ To test immediately, go to **Actions → Daily Agents Radar → Run workflow**.
 pnpm install
 
 export GITHUB_TOKEN=ghp_xxxxx
-export ANTHROPIC_BASE_URL=https://api.kimi.com/coding/
-export ANTHROPIC_API_KEY=sk-kimi-xxxxxxxx
+export OPENAI_BASE_URL=https://api.openai.com/v1
+export OPENAI_API_KEY=sk-xxxxxxxx
+export OPENAI_MODEL=gpt-4.1-mini
 export DIGEST_REPO=your-username/agents-radar  # optional; omit to only write files
 
 pnpm start

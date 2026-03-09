@@ -6,14 +6,28 @@
  *   TELEGRAM_BOT_TOKEN  — bot token from @BotFather
  *   TELEGRAM_CHAT_ID    — channel/group/user chat ID
  * Optional:
- *   PAGES_URL           — GitHub Pages base URL (defaults to the public deployment)
+ *   PAGES_URL           — GitHub Pages base URL; derived from repo slug when omitted
  */
 
 import fs from "node:fs";
 
 const BOT_TOKEN = process.env["TELEGRAM_BOT_TOKEN"] ?? "";
-const CHAT_ID = process.env["TELEGRAM_CHAT_ID"] || "@agents_radar";
-const PAGES_URL = (process.env["PAGES_URL"] ?? "https://duanyytop.github.io/agents-radar").replace(/\/$/, "");
+const CHAT_ID = process.env["TELEGRAM_CHAT_ID"] ?? "";
+
+function resolvePagesUrl(): string {
+  const explicit = process.env["PAGES_URL"] ?? process.env["SITE_URL"];
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const repo = process.env["DIGEST_REPO"] ?? process.env["GITHUB_REPOSITORY"];
+  if (repo) {
+    const [owner, name] = repo.split("/");
+    if (owner && name) return `https://${owner}.github.io/${name}`;
+  }
+
+  throw new Error("Missing PAGES_URL/SITE_URL and unable to derive from repository.");
+}
+
+const PAGES_URL = resolvePagesUrl();
 
 const ZH_LABELS: Record<string, string> = {
   "ai-cli": "AI CLI 工具",
@@ -88,6 +102,10 @@ function buildMessage(date: string, reports: string[]): string {
 async function main(): Promise<void> {
   if (!BOT_TOKEN) {
     console.log("[notify] TELEGRAM_BOT_TOKEN not set — skipping.");
+    return;
+  }
+  if (!CHAT_ID) {
+    console.log("[notify] TELEGRAM_CHAT_ID not set — skipping.");
     return;
   }
 

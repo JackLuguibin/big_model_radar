@@ -16,7 +16,6 @@
     "notify": "tsx src/notify.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {

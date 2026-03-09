@@ -4,7 +4,6 @@ import path from "path";
 const DIGESTS_DIR = "digests";
 const MANIFEST_PATH = "manifest.json";
 const FEED_PATH = "feed.xml";
-const SITE_URL = "https://duanyytop.github.io/agents-radar";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const REPORT_FILES = [
   "ai-cli",
@@ -54,6 +53,19 @@ interface Manifest {
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+function resolveSiteUrl(): string {
+  const explicit = process.env["PAGES_URL"] ?? process.env["SITE_URL"];
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const repo = process.env["DIGEST_REPO"] ?? process.env["GITHUB_REPOSITORY"];
+  if (repo) {
+    const [owner, name] = repo.split("/");
+    if (owner && name) return `https://${owner}.github.io/${name}`;
+  }
+
+  throw new Error("Missing site URL. Set PAGES_URL, SITE_URL, DIGEST_REPO, or GITHUB_REPOSITORY.");
+}
+
 function toRfc822(date: Date): string {
   return (
     `${DAYS[date.getUTCDay()]}, ${String(date.getUTCDate()).padStart(2, "0")} ` +
@@ -65,6 +77,8 @@ function toRfc822(date: Date): string {
 function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+const SITE_URL = resolveSiteUrl();
 
 const entries = fs
   .readdirSync(DIGESTS_DIR)

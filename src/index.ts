@@ -2,9 +2,12 @@
  * agents-radar: daily digest for AI CLI tools and OpenClaw.
  *
  * Env vars:
- *   ANTHROPIC_API_KEY   - API key (Anthropic or Kimi Code)
- *   ANTHROPIC_BASE_URL  - Endpoint override (e.g. https://api.kimi.com/coding/)
- *   ANTHROPIC_MODEL     - Model name (default: claude-sonnet-4-6)
+ *   OPENAI_API_KEY      - API key for an OpenAI-compatible endpoint
+ *   OPENAI_BASE_URL     - Endpoint override (default: https://api.openai.com/v1)
+ *   OPENAI_MODEL        - Model name (default: gpt-4.1-mini)
+ *   ANTHROPIC_API_KEY   - Backward-compatible alias for OPENAI_API_KEY
+ *   ANTHROPIC_BASE_URL  - Backward-compatible alias for OPENAI_BASE_URL
+ *   ANTHROPIC_MODEL     - Backward-compatible alias for OPENAI_MODEL
  *   GITHUB_TOKEN        - GitHub token for API access and issue creation
  *   DIGEST_REPO         - owner/repo where digest issues are posted (optional)
  */
@@ -29,7 +32,7 @@ import {
   buildTrendingPrompt,
   buildHnPrompt,
 } from "./prompts.ts";
-import { callLlm, saveFile, autoGenFooter } from "./report.ts";
+import { callLlm, saveFile, autoGenFooter, getLlmBaseUrl, hasLlmCredentials } from "./report.ts";
 import { loadWebState, saveWebState, fetchSiteContent, type WebFetchResult, type WebState } from "./web.ts";
 import { fetchTrendingData, type TrendingData } from "./trending.ts";
 import { fetchHnData, type HnData } from "./hn.ts";
@@ -534,7 +537,9 @@ async function saveHnReport(
 
 async function main(): Promise<void> {
   requireEnv("GITHUB_TOKEN");
-  requireEnv("ANTHROPIC_API_KEY");
+  if (!hasLlmCredentials()) {
+    throw new Error("Missing required environment variable: OPENAI_API_KEY");
+  }
 
   const now = new Date();
   const since = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -543,7 +548,7 @@ async function main(): Promise<void> {
   const digestRepo = process.env["DIGEST_REPO"] ?? "";
 
   console.log(
-    `[${now.toISOString()}] Starting digest | endpoint: ${process.env["ANTHROPIC_BASE_URL"] ?? "api.anthropic.com"}`,
+    `[${now.toISOString()}] Starting digest | endpoint: ${getLlmBaseUrl()}`,
   );
 
   // 1. Fetch all data in parallel
